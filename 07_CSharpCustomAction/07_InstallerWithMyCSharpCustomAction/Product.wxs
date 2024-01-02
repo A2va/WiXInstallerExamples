@@ -1,15 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*"
-           Language="1033"
-           Manufacturer="Acme Corporation"
-           Name="07_InstallerWithMyCSharpCustomAction"
-           UpgradeCode="{2B18F2F8-AA4D-45B8-B4ED-AF55CDBD6961}"
-           Version="1.0.0.0">
-
-    <Package InstallScope="perMachine" InstallerVersion="200" Compressed="yes" />
-
-    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Language="1033" Manufacturer="Acme Corporation" Name="07_InstallerWithMyCSharpCustomAction" UpgradeCode="{2B18F2F8-AA4D-45B8-B4ED-AF55CDBD6961}" Version="1.0.0.0" InstallerVersion="200"><MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
 
     <MediaTemplate EmbedCab="yes" />
 
@@ -19,12 +9,10 @@
     <Binary Id="CustomActions" SourceFile="$(var.07_MyCSharpCustomAction.TargetDir)$(var.07_MyCSharpCustomAction.TargetName).CA.dll" />
 
     <!-- Definition of immediate custom action -->
-    <CustomAction Id="MyCustomActionForReadingPropertyImmediate"
-                  BinaryKey="CustomActions" Execute="immediate" DllEntry="MyImmediateCustomAction" />
+    <CustomAction Id="MyCustomActionForReadingPropertyImmediate" Execute="immediate" DllEntry="MyImmediateCustomAction" BinaryRef="CustomActions" />
 
     <!-- Definition of deferred custom action -->
-    <CustomAction Id="MyCustomActionForReadingPropertyDeferred"
-                  BinaryKey="CustomActions" Execute="deferred" DllEntry="MyDeferredCustomAction" />
+    <CustomAction Id="MyCustomActionForReadingPropertyDeferred" Execute="deferred" DllEntry="MyDeferredCustomAction" BinaryRef="CustomActions" />
 
     <!--
     This CA is passing property values to the session.CustomActionData.
@@ -33,35 +21,24 @@
     This is not needed for immediate custom actions.
     Format of CustomActionData is "Key1=Value1;Key2=Value2;..."
     -->
-    <CustomAction Id="My_Type_51_CA_For_Setting_CustomActionData"
-                  Return="check"
-                  Property="MyCustomActionForReadingPropertyDeferred" 
-                  Value="MY_PROPERTY=[MY_PROPERTY];MY_INSTALL_LOCATION=[MY_INSTALL_LOCATION]" />
+    <CustomAction Id="My_Type_51_CA_For_Setting_CustomActionData" Return="check" Property="MyCustomActionForReadingPropertyDeferred" Value="MY_PROPERTY=[MY_PROPERTY];MY_INSTALL_LOCATION=[MY_INSTALL_LOCATION]" />
     
     <!-- Scheduling execution of custom actions -->
     <InstallExecuteSequence>
-      <Custom Action='My_Type_51_CA_For_Setting_CustomActionData' Before='InstallInitialize'></Custom>
-      <Custom Action='MyCustomActionForReadingPropertyImmediate' Before='InstallFinalize'>
-        NOT Installed AND NOT WIX_UPGRADE_DETECTED
-      </Custom>
-      <Custom Action='MyCustomActionForReadingPropertyDeferred' Before='InstallFinalize'>
-        NOT Installed AND NOT WIX_UPGRADE_DETECTED
-      </Custom>
+      <Custom Action="My_Type_51_CA_For_Setting_CustomActionData" Before="InstallInitialize"></Custom>
+      <Custom Action="MyCustomActionForReadingPropertyImmediate" Before="InstallFinalize" Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED" />
+      <Custom Action="MyCustomActionForReadingPropertyDeferred" Before="InstallFinalize" Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED" />
     </InstallExecuteSequence>
 
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="MY_INSTALL_LOCATION" Name="07_InstallerWithMyCSharpCustomAction" />
-      </Directory>
-    </Directory>
+    
 
     <ComponentGroup Directory="MY_INSTALL_LOCATION" Id="ProductComponentGroup">
       <Component Id="ProductComponent">
-        <File KeyPath="yes" Source="FileToInstall.txt"></File>
+        <File Id="FileToInstall.txt" KeyPath="yes" Source="FileToInstall.txt"></File>
       </Component>
-      <Component Id="cmp_RegistryEntry" Guid="*">
-        <RegistryKey Root='HKLM' Key='Software\[Manufacturer]\[ProductName]'>
-          <RegistryValue KeyPath='yes' Type='string' Name='My property' Value='[MY_PROPERTY]' />
+      <Component Id="cmp_RegistryEntry">
+        <RegistryKey Root="HKLM" Key="Software\[Manufacturer]\[ProductName]">
+          <RegistryValue KeyPath="yes" Type="string" Name="My property" Value="[MY_PROPERTY]" />
         </RegistryKey>
       </Component>
     </ComponentGroup>
@@ -70,5 +47,9 @@
       <ComponentGroupRef Id="ProductComponentGroup" />
     </Feature>
 
-  </Product>
+  
+      <StandardDirectory Id="ProgramFilesFolder">
+        <Directory Id="MY_INSTALL_LOCATION" Name="07_InstallerWithMyCSharpCustomAction" />
+      </StandardDirectory>
+    </Package>
 </Wix>
